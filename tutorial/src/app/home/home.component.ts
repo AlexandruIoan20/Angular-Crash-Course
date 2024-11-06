@@ -4,11 +4,12 @@ import { Product, Products } from '../../types';
 import { ProductComponent } from "../components/product/product.component";
 import { CommonModule } from '@angular/common';
 import { PaginatorModule } from 'primeng/paginator';
+import { EditPopupComponent } from "../components/edit-popup/edit-popup.component";
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [ProductComponent, CommonModule, PaginatorModule],
+  imports: [ProductComponent, CommonModule, PaginatorModule, EditPopupComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -23,8 +24,36 @@ export class HomeComponent {
   totalRecords: number = 0; 
   rows: number = 5; 
 
-  onProductOutput(product: Product) { 
-    console.log(product, "Output"); 
+  displayEditPopup: boolean = false;
+  displayAddPopup: boolean = false; 
+
+  selectedProduct: Product = { 
+    id: 0, 
+    name: '', 
+    image: '', 
+    price: '', 
+    rating: 0,
+  }
+
+  toggleEditPopup(product: Product) { 
+    this.selectedProduct = product; 
+    this.displayEditPopup = true; 
+
+
+  }
+
+  toggleAddPopup(product: Product) { 
+    this.displayAddPopup = true; 
+  }
+
+  onConfirmEdit(product: Product) { 
+    this.editProduct(product); 
+    this.displayEditPopup = false; 
+  }
+
+  onConfirmAdd(product: Product) { 
+    this.addProduct(product); 
+    this.displayAddPopup = false; 
   }
 
   fetchProducts(page: number, perPage: number) { 
@@ -43,8 +72,8 @@ export class HomeComponent {
       )
   }
 
-  editProduct(product: Product, id: number) { 
-    this.productsService.editProduct(`http://localhost:3000/clothes/${id}`, product).subscribe(
+  editProduct(product: Product) { 
+    this.productsService.editProduct(`http://localhost:3000/clothes/${product.id}`, product).subscribe(
       { 
         next: (data) => {
           console.log(data); 
