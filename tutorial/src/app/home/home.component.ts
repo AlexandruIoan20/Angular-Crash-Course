@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ProductsService } from '../services/products.service';
 import { Product, Products } from '../../types';
 import { ProductComponent } from "../components/product/product.component";
 import { CommonModule } from '@angular/common';
-import { PaginatorModule } from 'primeng/paginator';
+import { Paginator, PaginatorModule } from 'primeng/paginator';
 import { EditPopupComponent } from "../components/edit-popup/edit-popup.component";
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [ProductComponent, CommonModule, PaginatorModule, EditPopupComponent],
+  imports: [ProductComponent, CommonModule, PaginatorModule, EditPopupComponent, ButtonModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -20,6 +21,7 @@ export class HomeComponent {
   ) { 
 
   }
+  @ViewChild('paginator') paginator: Paginator | undefined; 
   products: Product[] = [];
   totalRecords: number = 0; 
   rows: number = 5; 
@@ -38,11 +40,13 @@ export class HomeComponent {
   toggleEditPopup(product: Product) { 
     this.selectedProduct = product; 
     this.displayEditPopup = true; 
-
-
   }
 
-  toggleAddPopup(product: Product) { 
+  toggleDeletePopup(product: Product) { 
+    this.deleteProduct(product?.id ?? 0); 
+  }
+
+  toggleAddPopup() { 
     this.displayAddPopup = true; 
   }
 
@@ -77,7 +81,6 @@ export class HomeComponent {
       { 
         next: (data) => {
           console.log(data); 
-          this.fetchProducts(0, this.rows); 
         },
         error: (error) => { 
           console.log(error); 
@@ -86,12 +89,13 @@ export class HomeComponent {
     )
   }
 
-  deleteProduct(product: Product) { 
-    this.productsService.deleteProduct(`http://localhost:3000/clothes/${product.id}`).subscribe(
+  deleteProduct(id: number) { 
+    this.productsService.deleteProduct(`http://localhost:3000/clothes/${id}`).subscribe(
       { 
         next: (data: Product) => { 
           console.log(data); 
           this.fetchProducts(0, this.rows); 
+          this.resetPaginator(); 
         }, 
         error: (error) => { 
           console.log(error); 
@@ -101,11 +105,10 @@ export class HomeComponent {
   }
 
   addProduct(product: Product) { 
-    this.productsService.addProduct(`http://localhost:3000/clothes/${product.id}`, product).subscribe(
+    this.productsService.addProduct(`http://localhost:3000/clothes/`, product).subscribe(
       { 
         next: (data: Product) => { 
-          console.log(data); 
-          this.fetchProducts(0, this.rows); 
+          console.log(data);
         },  
         error: (error) => { 
           console.log(error); 
@@ -116,8 +119,11 @@ export class HomeComponent {
 
   onPageChange(event: any) { 
     this.fetchProducts(event.page, event.rows); 
-    console.log({ event }); 
   } 
+
+  resetPaginator () { 
+    this.paginator?.changePage(0); 
+  }
 
   ngOnInit () { 
     this.fetchProducts(0, this.rows); 
